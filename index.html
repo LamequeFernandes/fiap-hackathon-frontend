@@ -313,6 +313,92 @@
       .layout { grid-template-columns: 1fr; }
       .sidebar { border-right: none; border-bottom: 1px solid var(--border); max-height: 320px; }
     }
+
+    .btn-pdf {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 12px;
+      padding: 8px 16px;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 8px;
+      font-size: .82rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: border-color .2s, color .2s, background .2s;
+    }
+    .btn-pdf:hover { border-color: var(--accent); color: var(--accent-hover); background: rgba(99,102,241,.06); }
+
+    .print-only { display: none; }
+
+    @media print {
+      @page { size: A4; margin: 2.2cm 2.5cm; }
+
+      body { background: #fff !important; color: #111 !important; }
+      header, .sidebar, .btn-pdf { display: none !important; }
+      .layout { display: block !important; }
+      .main { padding: 0 !important; overflow: visible !important; }
+      .print-only { display: block !important; }
+
+      .print-doc-header {
+        display: flex !important;
+        justify-content: space-between;
+        align-items: flex-start;
+        padding-bottom: 14px;
+        margin-bottom: 28px;
+        border-bottom: 2px solid #111;
+      }
+      .print-doc-header-brand { font-size: .95rem; font-weight: 700; color: #111; }
+      .print-doc-header-sub   { font-size: .75rem; color: #555; margin-top: 3px; }
+      .print-doc-header-right { text-align: right; font-size: .75rem; color: #555; line-height: 1.5; }
+
+      .report-header h2     { font-size: 1.25rem; color: #111 !important; }
+      .report-meta          { color: #555 !important; }
+      .section h3           { color: #374151 !important; border-bottom-color: #d1d5db !important; }
+
+      .summary-box {
+        background: #f8fafc !important;
+        color: #1e293b !important;
+        border-color: #e2e8f0 !important;
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+      }
+      .chip {
+        background: #ede9fe !important;
+        border-color: #c4b5fd !important;
+        color: #4c1d95 !important;
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+      }
+      .risk-item {
+        background: #fef2f2 !important;
+        border-color: #fecaca !important;
+        color: #991b1b !important;
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+      }
+      .rec-item {
+        background: #f0fdf4 !important;
+        border-color: #bbf7d0 !important;
+        color: #14532d !important;
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+      }
+      .rec-item::before { color: #14532d !important; }
+
+      .section { page-break-inside: avoid; margin-bottom: 22px; }
+
+      .print-doc-footer {
+        margin-top: 36px;
+        padding-top: 10px;
+        border-top: 1px solid #d1d5db;
+        font-size: .7rem;
+        color: #9ca3af;
+        text-align: center;
+      }
+    }
   </style>
 </head>
 <body>
@@ -649,13 +735,30 @@ function renderReport(d, r) {
     ? r.recommendations.map(x => `<div class="rec-item">${esc(x)}</div>`).join('')
     : '<div style="color:var(--muted);font-size:.85rem">Sem recomendações.</div>';
 
+  const emittedAt = new Date().toLocaleString('pt-BR', { dateStyle: 'long', timeStyle: 'short' });
+
   showReport(`
+    <div class="print-only print-doc-header">
+      <div>
+        <div class="print-doc-header-brand">Architecture Diagram Analyzer</div>
+        <div class="print-doc-header-sub">FIAP Hackathon — SOAT</div>
+      </div>
+      <div class="print-doc-header-right">
+        <div>Relatório de Análise Arquitetural</div>
+        <div>Emitido em: ${emittedAt}</div>
+      </div>
+    </div>
+
     <div class="report-header">
       <h2>${esc(d.name)}</h2>
       <div class="report-meta">
         <span>ID: ${r.analysis_id}</span>
         <span>Gerado em: ${fmtDate(r.created_at)}</span>
       </div>
+      <button class="btn-pdf" onclick="window.print()">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2.5 9.5H2a1 1 0 0 1-1-1v-4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1h-.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><rect x="3" y="7.5" width="8" height="5" rx=".75" stroke="currentColor" stroke-width="1.2"/><path d="M3 3.5V1.75C3 1.336 3.336 1 3.75 1h4.5L11 3.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Baixar PDF
+      </button>
     </div>
 
     <div class="section">
@@ -676,6 +779,10 @@ function renderReport(d, r) {
     <div class="section">
       <h3>Recomendações (${r.recommendations?.length ?? 0})</h3>
       <div class="rec-list">${recs}</div>
+    </div>
+
+    <div class="print-only print-doc-footer">
+      Documento gerado automaticamente pelo Architecture Diagram Analyzer &middot; FIAP Hackathon SOAT &middot; ${emittedAt}
     </div>
   `);
 }
